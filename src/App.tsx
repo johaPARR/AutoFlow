@@ -366,6 +366,7 @@ function App() {
                   textAlign="center"
                   maxLength={9}
                   disabled={isLoading || isValiding}
+                  color="whiteAlpha.900"
                 />
                 {!vehiculoValidado && (
                   <Button
@@ -522,7 +523,7 @@ function App() {
                   <Text fontSize="sm" fontWeight="bold" color="blue.300">
                     2. Selecciona Tipo de Evidencia <Text as="span" color="red.500">*</Text>
                   </Text>
-                  <HStack gap={4} justify="space-around" w="full">
+                  <HStack gap={2} justify="center" w="full" flexWrap="wrap">
                     {[
                       { value: 'PRE', label: 'PRE Reparación', color: 'teal' },
                       { value: 'POST', label: 'POST Reparación', color: 'purple' },
