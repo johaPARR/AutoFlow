@@ -153,7 +153,11 @@ function App() {
   // ==========================================
   // PASO 1: VALIDACIÓN (MODO DEMO PARA TU JEFE)
   // ==========================================
+  // ==========================================
+  // PASO 1: VALIDACIÓN (CONEXIÓN A N8N) - CORREGIDO
+  // ==========================================
   const validarVehiculo = async () => {
+    // La función DEBE empezar aquí
     if (!patente.trim()) {
       setErrors({ patente: "Debes ingresar una patente." });
       return;
@@ -161,23 +165,38 @@ function App() {
     
     setIsValidating(true);
     
-    // Simulación exitosa en 1 segundo para tu demo de mañana
-    setTimeout(() => {
-      setVehiculoValidado(true);
-      setVehiculoInfo({
-        marca: "Peugeot",
-        modelo: "208 Active",
-        cliente: "Juan Pérez (Ficha de Prueba)"
+    try {
+      // AQUÍ ES DONDE OCURRE LA MAGIA: CONECTAMOS CONtu N8N
+      // Cuando tengas la URL real de tu n8n, reemplázala aquí:
+      const respuesta = await axios.post("https://johaparr.app.n8n.cloud/webhook-test/validar-vehiculo", { 
+        patente: patente 
       });
+
+      // Si n8n responde que el vehículo existe, actualizamos el formulario
+      setVehiculoValidado(true);
+      
+      // Asumimos que n8n devuelve {marca, modelo, cliente} en la respuesta
+      setVehiculoInfo(respuesta.data); 
       setIsValidating(false);
+      
       toast({
         title: "Vehículo Encontrado",
         description: "Se han desbloqueado las opciones de carga.",
         status: "success",
         duration: 3000,
       });
-    }, 1000);
-  };
+    } catch (error) {
+      // Si hay un error de conexión o la patente no existe
+      console.error("Error al validar patente:", error);
+      setIsValidating(false);
+      toast({
+        title: "Error de Validación",
+        description: "No se pudo conectar con el sistema. Verifica la patente.",
+        status: "error",
+        duration: 4000,
+      });
+    }
+  }; // <--- La función DEBE terminar aquí, al final de todo el bloque
 
   // ==========================================
   // ENVÍO FORMULARIO 1: FOTOS
