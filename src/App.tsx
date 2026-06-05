@@ -112,14 +112,17 @@ function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const rol = queryParams.get('rol') || 'mecanico'; // Por defecto es mecánico
 
-  // ==========================================
+// ==========================================
   // ESTADOS COMUNES DE VALIDACIÓN
   // ==========================================
   const [patente, setPatente] = useState<string>('');
   const [vehiculoValidado, setVehiculoValidado] = useState<boolean>(false);
   const [vehiculoInfo, setVehiculoInfo] = useState<VehiculoInfo | null>(null);
   const [errors, setErrors] = useState<{ patente?: string }>({});
-  const [isValiding, setIsValidating] = useState<boolean>(false);
+  
+  // ESTADO UNIFICADO SIN ALIAS (Elimina cualquier error de TypeScript)
+  const [isValidating, setIsValidating] = useState<boolean>(false);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mensajeProgreso, setMensajeProgreso] = useState<string>('');
   const [porcentajeCarga, setPorcentajeCarga] = useState<number>(0);
@@ -149,15 +152,10 @@ function App() {
       setErrors((prev) => ({ ...prev, patente: undefined }));
     }
   };
-
-  // ==========================================
-  // PASO 1: VALIDACIÓN (MODO DEMO PARA TU JEFE)
-  // ==========================================
-  // ==========================================
-  // PASO 1: VALIDACIÓN (CONEXIÓN A N8N) - CORREGIDO
+ // ==========================================
+  // PASO 1: VALIDACIÓN (CONEXIÓN A N8N) - CORREGIDO PROD
   // ==========================================
   const validarVehiculo = async () => {
-    // La función DEBE empezar aquí
     if (!patente.trim()) {
       setErrors({ patente: "Debes ingresar una patente." });
       return;
@@ -166,9 +164,8 @@ function App() {
     setIsValidating(true);
     
     try {
-      // AQUÍ ES DONDE OCURRE LA MAGIA: CONECTAMOS CONtu N8N
-      // Cuando tengas la URL real de tu n8n, reemplázala aquí:
-      const respuesta = await axios.post("https://johaparr.app.n8n.cloud/webhook-test/validar-vehiculo", { 
+      // URL CAMBIADA A PRODUCCIÓN (Sin el "-test")
+      const respuesta = await axios.post("https://johaparr.app.n8n.cloud/webhook/validar-vehiculo", { 
         patente: patente 
       });
 
@@ -196,7 +193,7 @@ function App() {
         duration: 4000,
       });
     }
-  }; // <--- La función DEBE terminar aquí, al final de todo el bloque
+  };// <--- La función DEBE terminar aquí, al final de todo el bloque
 
   // ==========================================
   // ENVÍO FORMULARIO 1: FOTOS
@@ -364,38 +361,38 @@ function App() {
           </VStack>
 
           {/* Paso 1 Obligatorio de Validación */}
-          <VStack gap={4} align="stretch" mb={6}>
-            <VStack align="stretch" gap={2}>
-              <Text fontSize="sm" fontWeight="bold" color="blue.300">
-                1. Validación de Patente del Vehículo <Text as="span" color="red.500">*</Text>
-              </Text>
-              <HStack gap={2}>
-                <Input
-                  placeholder="Ej: AB123CD"
-                  value={patente}
-                  onChange={handlePatenteChange}
-                  size="lg"
-                  bg="rgba(255, 255, 255, 0.04)"
-                  border="1px solid rgba(255, 255, 255, 0.12)"
-                  _hover={{ borderColor: "blue.400" }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
-                  fontSize="xl"
-                  fontWeight="black"
-                  letterSpacing="widest"
-                  textAlign="center"
-                  maxLength={9}
-                  disabled={isLoading || isValiding}
-                  color="whiteAlpha.900"
-                />
-                {!vehiculoValidado && (
+         <VStack gap={4} align="stretch" mb={6}>
+  <VStack align="stretch" gap={2}>
+    <Text fontSize="sm" fontWeight="bold" color="blue.300">
+      1. Validación de Patente del Vehículo <Text as="span" color="red.500">*</Text>
+    </Text>
+    <HStack gap={2}>
+      <Input
+        placeholder="Ej: AB123CD"
+        value={patente}
+        onChange={handlePatenteChange}
+        size="lg"
+        bg="rgba(255, 255, 255, 0.04)"
+        border="1px solid rgba(255, 255, 255, 0.12)"
+        _hover={{ borderColor: "blue.400" }}
+        _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px #3182ce" }}
+        fontSize="xl"
+        fontWeight="black"
+        letterSpacing="widest"
+        textAlign="center"
+        maxLength={9}
+        disabled={isLoading || isValidating}
+        color="whiteAlpha.900"
+      />
+      {!vehiculoValidado && (
                   <Button
-                    colorPalette="blue"
-                    onClick={validarVehiculo}
-                    loading={isValiding}
-                    loadingText="Buscando..."
-                    size="lg"
-                    gap={2}
-                  >
+  colorPalette="blue"
+  onClick={validarVehiculo}
+  loading={isValidating}
+  loadingText="Buscando..."
+  size="lg"
+  gap={2}
+>
                     <FiSearch /> Validar
                   </Button>
                 )}
