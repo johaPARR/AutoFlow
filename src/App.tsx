@@ -152,7 +152,8 @@ function App() {
       setErrors((prev) => ({ ...prev, patente: undefined }));
     }
   };
- // ==========================================
+
+  // ==========================================
   // PASO 1: VALIDACIÓN (CONEXIÓN A N8N) - CORREGIDO PROD
   // ==========================================
   const validarVehiculo = async () => {
@@ -169,23 +170,52 @@ function App() {
         patente: patente 
       });
 
-      // Si n8n responde que el vehículo existe, actualizamos el formulario
-      setVehiculoValidado(true);
-      
-      // Asumimos que n8n devuelve {marca, modelo, cliente} en la respuesta
-      setVehiculoInfo(respuesta.data); 
-      setIsValidating(false);
-      
-      toast({
-        title: "Vehículo Encontrado",
-        description: "Se han desbloqueado las opciones de carga.",
-        status: "success",
-        duration: 3000,
-      });
+      const data = respuesta.data;
+
+      // Validamos si la respuesta contiene datos reales del vehículo
+      // Admite tanto un objeto {marca, modelo, cliente} como un array [{...}] directo de WordPress
+      const tieneDatos = data && 
+                         (typeof data === 'object') && 
+                         !data.error &&
+                         (Array.isArray(data) ? data.length > 0 : (data.marca || data.modelo || data.cliente));
+
+      if (tieneDatos) {
+        const infoVehiculo = Array.isArray(data) ? data[0] : data;
+        
+        setVehiculoValidado(true);
+        setVehiculoInfo({
+          marca: infoVehiculo.marca || "Desconocida",
+          modelo: infoVehiculo.modelo || "",
+          cliente: infoVehiculo.cliente || "Cliente Registrado"
+        });
+        setIsValidating(false);
+        
+        toast({
+          title: "Vehículo Encontrado",
+          description: "Se han desbloqueado las opciones de carga.",
+          status: "success",
+          duration: 3000,
+        });
+      } else {
+        // Si el servidor responde con un array vacío o un objeto sin datos válidos
+        setVehiculoValidado(false);
+        setVehiculoInfo(null);
+        setIsValidating(false);
+        
+        toast({
+          title: "Vehículo No Registrado",
+          description: "La patente ingresada no se encuentra en el sistema.",
+          status: "error",
+          duration: 4500,
+        });
+      }
     } catch (error) {
-      // Si hay un error de conexión o la patente no existe
+      // Si hay un error de conexión
       console.error("Error al validar patente:", error);
+      setVehiculoValidado(false);
+      setVehiculoInfo(null);
       setIsValidating(false);
+      
       toast({
         title: "Error de Validación",
         description: "No se pudo conectar con el sistema. Verifica la patente.",
@@ -193,7 +223,7 @@ function App() {
         duration: 4000,
       });
     }
-  };// <--- La función DEBE terminar aquí, al final de todo el bloque
+  };
 
   // ==========================================
   // ENVÍO FORMULARIO 1: FOTOS
